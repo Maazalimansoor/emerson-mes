@@ -1,0 +1,4 @@
+openpyxl
+filelock
+requests
+pyinstaller

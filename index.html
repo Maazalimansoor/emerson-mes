@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EMERSON MES</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f172a;
+            color: white;
+            margin: 0;
+        }
+
+        h2 {
+            text-align: center;
+            padding: 15px;
+        }
+
+        /* ================= TAB BUTTONS ================= */
+        .tab {
+            overflow: hidden;
+            background: #111827;
+            display: flex;
+        }
+
+        .tab button {
+            flex: 1;
+            padding: 14px;
+            cursor: pointer;
+            background: #111827;
+            color: white;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .tab button:hover {
+            background: #1f2937;
+        }
+
+        .tab button.active {
+            background: #2563eb;
+        }
+
+        /* ================= TAB CONTENT ================= */
+        .tabcontent {
+            display: none;
+            padding: 20px;
+        }
+
+        .box {
+            width: 420px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #111827;
+            border-radius: 10px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>EMERSON TRACEABILITY SYSTEM</h2>
+
+<!-- ================= TAB HEADER ================= -->
+<div class="tab">
+    <button class="tablinks active" onclick="openTab(event, 'glassTab')">Glass Label</button>
+    <button class="tablinks" onclick="openTab(event, 'qcTab')">QC Label</button>
+</div>
+
+<!-- ================= GLASS TAB ================= -->
+<div id="glassTab" class="tabcontent" style="display:block;">
+
+    <div class="box">
+
+        <h3>Glass Label</h3>
+
+        <input id="wo" placeholder="WO">
+
+        <select id="part">
+            <option value="">Select Part</option>
+            {% for p in parts %}
+            <option value="{{p}}">{{p}}</option>
+            {% endfor %}
+        </select>
+
+        <input id="stem" placeholder="Stem">
+        <input id="crucible" placeholder="Crucible">
+        <input id="powder" placeholder="Powder">
+
+        <select id="name" onchange="fillOpNo()">
+            <option value="">Select Operator</option>
+            {% for name in operators.keys() %}
+            <option value="{{name}}">{{name}}</option>
+            {% endfor %}
+        </select>
+
+        <input id="opno" placeholder="OP No" readonly>
+        <input id="qty" placeholder="Qty">
+
+        <button onclick="saveGlass()">SAVE + PRINT</button>
+    </div>
+
+</div>
+
+<!-- ================= QC TAB ================= -->
+<div id="qcTab" class="tabcontent">
+
+    <div class="box">
+
+        <h3>QC Label</h3>
+
+        <select id="qc_part">
+            <option value="">Select Part</option>
+            {% for p in parts %}
+            <option value="{{p}}">{{p}}</option>
+            {% endfor %}
+        </select>
+
+        <input id="lot" placeholder="Scan Glass Lot ID">
+
+        <button onclick="saveQC()">SAVE QC</button>
+    </div>
+
+</div>
+
+<!-- ================= SCRIPT ================= -->
+<script>
+
+const operatorMap = {{ operators | tojson }};
+
+function fillOpNo() {
+    let name = document.getElementById("name").value;
+    document.getElementById("opno").value = operatorMap[name] || "";
+}
+
+/* ================= TAB SWITCH ================= */
+function openTab(evt, tabName) {
+
+    let tabcontent = document.getElementsByClassName("tabcontent");
+    for (let i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    let tablinks = document.getElementsByClassName("tablinks");
+    for (let i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+
+/* ================= SAVE GLASS ================= */
+async function saveGlass() {
+
+    let data = {
+        wo: document.getElementById("wo").value,
+        part: document.getElementById("part").value,
+        stem: document.getElementById("stem").value,
+        crucible: document.getElementById("crucible").value,
+        powder: document.getElementById("powder").value,
+        name: document.getElementById("name").value,
+        opno: document.getElementById("opno").value,
+        qty: document.getElementById("qty").value
+    };
+
+    let res = await fetch("/save_glass", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    });
+
+    let out = await res.json();
+    alert(out.msg);
+
+    if (out.status === "ok") {
+        window.open("{{ glass_url }}", "_blank");
+    }
+}
+
+/* ================= SAVE QC ================= */
+async function saveQC() {
+
+    let data = {
+        part: document.getElementById("qc_part").value,
+        lot: document.getElementById("lot").value
+    };
+
+    let res = await fetch("/save_qc", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(data)
+    });
+
+    let out = await res.json();
+    alert(out.msg);
+
+    if (out.status === "ok") {
+        window.open("{{ qc_url }}", "_blank");
+    }
+}
+
+</script>
+
+</body>
+</html>
