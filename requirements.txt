@@ -2,3 +2,6 @@ openpyxl
 filelock
 requests
 pyinstaller
+Flask
+openpyxl
+gunicorn
